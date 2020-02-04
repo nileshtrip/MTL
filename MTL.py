@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 import autograd.numpy as np
@@ -20,13 +20,13 @@ import os
 import pickle
 
 
-# In[2]:
+# In[ ]:
 
 
 ray.init(num_cpus=48, redis_password="123456")
 
 
-# In[3]:
+# In[ ]:
 
 
 def sin_angle(B1, B2):
@@ -39,7 +39,7 @@ def sin_angle(B1, B2):
     return sin_theta
 
 
-# In[4]:
+# In[ ]:
 
 
 def eigs(M):
@@ -53,7 +53,7 @@ def eigs(M):
     return eigenValues, eigenVectors
 
 
-# In[5]:
+# In[ ]:
 
 
 def get_col_space(B, r):
@@ -63,7 +63,7 @@ def get_col_space(B, r):
     return u[:, 0:r]
 
 
-# In[6]:
+# In[ ]:
 
 
 def gen_train_model(d, r, T, train_n):
@@ -81,7 +81,7 @@ def gen_train_model(d, r, T, train_n):
     return train_data, B, train_alphas
 
 
-# In[7]:
+# In[ ]:
 
 
 def gen_test_model(d, r, B, test_n):
@@ -94,7 +94,7 @@ def gen_test_model(d, r, B, test_n):
     return (X, y), alpha
 
 
-# In[8]:
+# In[ ]:
 
 
 def MoM(train_data):
@@ -116,7 +116,7 @@ def MoM(train_data):
     return M
 
 
-# In[9]:
+# In[ ]:
 
 
 def rPCA(M, r):
@@ -126,7 +126,7 @@ def rPCA(M, r):
     return eigVecs[:, :r], eigVecs[:, r:]
 
 
-# In[10]:
+# In[ ]:
 
 
 def change_shape(w, d, r, T):
@@ -140,7 +140,7 @@ def change_shape(w, d, r, T):
     return B, V
 
 
-# In[11]:
+# In[ ]:
 
 
 def MS_Loss(weights, train_data, d, r, m):
@@ -164,7 +164,7 @@ def MS_Loss(weights, train_data, d, r, m):
     return loss
 
 
-# In[12]:
+# In[ ]:
 
 
 def LR_Loss(weights, test_data):
@@ -178,7 +178,7 @@ def LR_Loss(weights, test_data):
     return loss
 
 
-# In[13]:
+# In[ ]:
 
 
 def MetaLR_w_MOM(train_data, r, test_data):
@@ -197,7 +197,7 @@ def MetaLR_w_MOM(train_data, r, test_data):
     return B1, beta_LR
 
 
-# In[14]:
+# In[ ]:
 
 
 def MetaLR_w_FO(train_data, r, test_data):
@@ -212,7 +212,7 @@ def MetaLR_w_FO(train_data, r, test_data):
     V_init = np.random.normal(size=(T,r)).flatten()
     w = np.concatenate((B_init, V_init))
     
-    res_ms = scipy.optimize.minimize(MS_Loss, w, jac=ms_gradients, method='L-BFGS-B', args=(train_data, d, r, m))   
+    res_ms = scipy.optimize.minimize(MS_Loss, w, jac=ms_gradients, method='L-BFGS-B', args=(train_data, d, r, m), options = {'maxiter' : 1000})   
     B_gd, V_gd = change_shape(res_ms.x, d, r, T)
     B1 = get_col_space(B_gd, r)
     
@@ -223,7 +223,7 @@ def MetaLR_w_FO(train_data, r, test_data):
     test_gradients = grad(LR_Loss)
     
     w = np.random.normal(size=r).flatten()
-    res_test = scipy.optimize.minimize(LR_Loss, w, jac=test_gradients, method='L-BFGS-B', args=(test_data_new))  
+    res_test = scipy.optimize.minimize(LR_Loss, w, jac=test_gradients, method='L-BFGS-B', args=(test_data_new), options = {'maxiter' : 1000})  
     alpha_LR = res_test.x
     
     beta_LR = B1 @ alpha_LR
@@ -231,7 +231,7 @@ def MetaLR_w_FO(train_data, r, test_data):
     return B1, beta_LR
 
 
-# In[15]:
+# In[ ]:
 
 
 def LR(test_data):
@@ -242,7 +242,7 @@ def LR(test_data):
     return beta_LR
 
 
-# In[16]:
+# In[ ]:
 
 
 @ray.remote
@@ -265,7 +265,7 @@ def run_expt(d, r, T, train_n, test_n, seed):
     return np.linalg.norm(beta_meta_LR_mom-beta_true), np.linalg.norm(beta_meta_LR_fo-beta_true), np.linalg.norm(beta_LR-beta_true), sin_theta_mom, sin_theta_fo 
 
 
-# In[17]:
+# In[ ]:
 
 
 def run_parallel_expt(d, r, T, train_n, test_n, reps):
@@ -288,23 +288,23 @@ def run_parallel_expt(d, r, T, train_n, test_n, reps):
 #First Experiment with Large Test Set
 
 
-# In[18]:
+# In[ ]:
 
 
 d=100
 r=5
-train_n=300
-test_n=1000
-reps=10
+train_n=5
+test_n=2500
+reps=30
 
 
-# In[19]:
+# In[ ]:
 
 
 T_list = [100, 200, 400, 800, 1600, 3200, 6400]
 
 
-# In[20]:
+# In[ ]:
 
 
 def collect_data_T(d, r, T_list, train_n, test_n, reps):
@@ -397,7 +397,7 @@ d=100
 r=5
 train_n=25
 test_n=25
-reps=10
+reps=30
 
 
 # In[ ]:
@@ -449,9 +449,9 @@ pickle.dump(save_data, open(file_path, "wb"))
 
 d=100
 r=5
-T=5
+T=20
 test_n=50
-reps=10
+reps=30
 
 
 # In[ ]:
@@ -463,9 +463,9 @@ train_n_list = [100, 200, 400, 800, 1600, 3200, 6400]
 # In[ ]:
 
 
-def collect_data_n(d, r, T, train_n_list, test_n, reps):
+def collect_data_n(d, r, t, train_n_list, test_n, reps):
     
-    etaLRmommus=[]
+    metaLRmommus=[]
     metaLRmomstd=[]
     
     metaLRfomus=[]
@@ -505,7 +505,7 @@ def collect_data_n(d, r, T, train_n_list, test_n, reps):
 # In[ ]:
 
 
-metaLRmom, metaLRfo, betaLR, sinthetamom, sinthetafo = collect_data_n(d, r, T_list, train_n, test_n, reps)
+metaLRmom, metaLRfo, betaLR, sinthetamom, sinthetafo = collect_data_n(d, r, T, train_n_list, test_n, reps)
 
 
 # In[ ]:
